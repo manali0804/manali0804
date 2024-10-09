@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# Define the Excel file path
+EXCEL_FILE="ip_path.ods"
+CSV_FILE="temp_servers.csv"
+
+# Convert Excel to CSV
+ssconvert "$EXCEL_FILE" "$CSV_FILE"
+
+# Read the CSV file line by line, skipping the header
+while IFS=',' read -r IP Path; do
+    # Skip the header line
+    if [[ "$IP" == "IP" ]]; then
+        continue
+    fi
+
+    # Trim any leading or trailing whitespace
+    IP=$(echo "$IP" | xargs)
+    Path=$(echo "$Path" | xargs)
+
+    # Ensure Path starts with a slash
+    if [[ "$Path" != /* ]]; then
+        Path="/$Path"
+    fi
+    
+    # SSH into the IP and navigate to the specified path, creating the directory
+    ssh root@$IP "cd $Path && mkdir manali1" >/dev/null 2>&1
+
+done < "$CSV_FILE"  # Redirect input to the while loop
+
+# Clean up the temporary CSV file
+rm "$CSV_FILE"
+
